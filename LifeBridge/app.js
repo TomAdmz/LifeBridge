@@ -8,10 +8,10 @@ var bodyParser = require('body-parser');
 
 var mysql = require('mysql');
 var pool = mysql.createPool({
-  host  : 'localhost',
-  user  : 'student',
-  password: 'default',
-  database: 'student'
+  host  : 'oniddb.cws.oregonstate.edu',
+  user  : 'gossje-db',
+  password: 'zYt3s1ifddQM3fVU',
+  database: 'gossje-db'
 });
 
 app.use(express.static('public'));
