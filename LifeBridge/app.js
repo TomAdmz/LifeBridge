@@ -7,8 +7,9 @@ var request = require('request');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var methodOverride = require('method-override');
+var flash = require('connect-flash');
 var passport = require('passport'),
-    LocalStrategy = require('passport-local'),
+    LocalStrategy = require('passport-local').Strategy,
     TwitterStrategy = require('passport-twitter'),
     GoogleStrategy = require('passport-google'),
     FacebookStrategy = require('passport-facebook');
@@ -43,6 +44,7 @@ var getConnection = function(callback) {
 //===============EXPRESS================
 
 app.use(express.static('public'));
+app.use(flash());
 //app.use(logger('combined'));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -60,7 +62,7 @@ passport.serializeUser(function(user, done) {
 });
 // used to deserialize the user
 passport.deserializeUser(function(id, done) {
-  pool.query("select * from users where id = "+id,function(err,rows){ 
+  connection.query("select * from users where userId = "+id,function(err,rows){ 
     done(err, rows[0]);
   });
 });
@@ -92,7 +94,7 @@ function(req, email, password, done) {
           newUserMysql.username = email;
           newUserMysql.password = password; // use the generateHash function in our user model
       
-          var insertQuery = "INSERT INTO users ( username, password, fname, lname, stat ) values ('" + email +"','"+ password +"')";
+          var insertQuery = "INSERT INTO users ( userName, pword ) values ('" + email +"','"+ password +"')";
           console.log(insertQuery);
           connection.query(insertQuery,function(err,rows){
           newUserMysql.id = rows.insertId;
@@ -102,6 +104,7 @@ function(req, email, password, done) {
             } 
     });
 }));
+
 // Session-persisted message middleware
 app.use(function(req, res, next){
   var err = req.session.error,
