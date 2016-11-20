@@ -5,9 +5,16 @@ var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var session = require('express-session');
 var request = require('request');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
+var methodOverride = require('method-override');
+var passport = require('passport'),
+    LocalStrategy = require('passport-local'),
+    TwitterStrategy = require('passport-twitter'),
+    GoogleStrategy = require('passport-google'),
+    FacebookStrategy = require('passport-facebook');
 
 var mysql = require('mysql');
-var pool = mysql.createPool({
+var connection = mysql.createConnection({
   host: 'sql3.freemysqlhosting.net',
   user: 'sql3145356',
   port: '3306',
@@ -15,15 +22,13 @@ var pool = mysql.createPool({
   database: 'sql3145356'
 });
 
-
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(session({secret:'SuperSecretPassword'}));
-
-app.engine('handlebars', handlebars.engine);
-app.set('view engine', 'handlebars');
-app.set('port', 50000);
-
+connection.query('SELECT * from users', function(err, rows, fields) {
+  if (!err)
+    console.log('The solution is: ', rows);
+  else
+    console.log('Error while performing Query.');
+});
+/*
 var getConnection = function(callback) {
     pool.getConnection(function(err, connection) {
         if (err) {
@@ -34,11 +39,125 @@ var getConnection = function(callback) {
         connection.release();
     });
 };
+*/
+//===============EXPRESS================
+
+app.use(express.static('public'));
+//app.use(logger('combined'));
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(methodOverride('X-HTTP-Method-Override'));
+app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+//===============PASSPORT===============
+// used to serialize the user for the session
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+// used to deserialize the user
+passport.deserializeUser(function(id, done) {
+  pool.query("select * from users where id = "+id,function(err,rows){ 
+    done(err, rows[0]);
+  });
+});
+
+passport.use('local-signup', new LocalStrategy({
+        // by default, local strategy uses username and password, we will override with email
+        usernameField : 'email',
+        passwordField : 'password',
+        passReqToCallback : true // allows us to pass back the entire request to the callback
+    },
+
+function(req, email, password, done) {
+
+    // find a user whose email is the same as the forms email
+    // we are checking to see if the user trying to login already exists
+    connection.query("select * from users where userName = '"+email+"'",function(err,rows){
+      console.log(rows);
+      console.log("above row object");
+      if (err)
+        return done(err);
+       if (rows.length) {
+                return done(null, false, req.flash('signupMessage', 'That e-mail is already taken.'));
+        } else {
+
+        // if there is no user with that email
+                // create the user
+          var newUserMysql = new Object();
+        
+          newUserMysql.username = email;
+          newUserMysql.password = password; // use the generateHash function in our user model
+      
+          var insertQuery = "INSERT INTO users ( username, password, fname, lname, stat ) values ('" + email +"','"+ password +"')";
+          console.log(insertQuery);
+          connection.query(insertQuery,function(err,rows){
+          newUserMysql.id = rows.insertId;
+        
+        return done(null, newUserMysql);
+        }); 
+            } 
+    });
+}));
+// Session-persisted message middleware
+app.use(function(req, res, next){
+  var err = req.session.error,
+      msg = req.session.notice,
+      success = req.session.success;
+
+  delete req.session.error;
+  delete req.session.success;
+  delete req.session.notice;
+
+  if (err) res.locals.error = err;
+  if (msg) res.locals.notice = msg;
+  if (success) res.locals.success = success;
+
+  next();
+});
+
+
+app.engine('handlebars', handlebars.engine);
+app.set('view engine', 'handlebars');
+app.set('port', 50000);
+
+
+//===============ROUTES===============
 
 app.get('/', function(req, res) {
+  //res.render('home');
   res.render('home');
-  getConnection();
 }); 
+
+//displays our signup page
+app.get('/signin', function(req, res){
+  res.render('signin');
+});
+//sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
+app.post('/local-reg', passport.authenticate('local-signup', {
+  successRedirect: '/',
+  failureRedirect: '/signin'
+  })
+);
+
+//sends the request through our local login/signin strategy, and if successful takes user to homepage, otherwise returns then to signin page
+app.post('/login', passport.authenticate('local-signin', {
+  successRedirect: '/',
+  failureRedirect: '/signin'
+  })
+);
+
+//logs user out of site, deleting them from the session, and returns to homepage
+app.get('/logout', function(req, res){
+  var name = req.user.username;
+  console.log("LOGGIN OUT " + req.user.username)
+  req.logout();
+  res.redirect('/');
+  req.session.notice = "You have successfully been logged out " + name + "!";
+});
 
 
 app.use(function(req,res){
@@ -48,11 +167,11 @@ app.use(function(req,res){
 
 app.use(function(err, req, res, next){
   console.error(err.stack);
-  //res.type('plain/text');
   res.status(500);
   res.render('500');
 });
 
+//===============PORT=================
 app.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });
