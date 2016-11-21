@@ -3,7 +3,7 @@ userID int(11) NOT NULL AUTO_INCREMENT,
 fname varchar(255) NOT NULL,
 lname varchar(255) NOT NULL,
 pword varchar(255) NOT NULL,
-stat int(11) NOT NULL,
+stat varchar(255) NOT NULL,
 PRIMARY KEY (userID)
 );
 
