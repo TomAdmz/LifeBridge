@@ -1,5 +1,8 @@
 <div class="jumbotron">
   <h1>Sign in</h1>
+  <% if (message.length > 0) { %>
+    <div class="alert alert-danger"><%= message %></div>
+  <% } %>
   <p>Please sign-in to your account to view your profile.</p>
 
   <div id="local" class="">
@@ -10,8 +13,8 @@
   <form id="local-sign-in" class="collapse" action="/login" method="post">
     <div>
         <p></p>
-        <label>Username:</label>
-        <input type="text" name="username"/>
+        <label>E-mail:</label>
+        <input type="text" name="email"/>
     </div>
     <div>
         <label>Password:</label>
@@ -21,7 +24,6 @@
         <input type="submit" class="btn btn-primary btn-sm" value="Log In"/>
     </div>
   </form>
-
   <form id="local-reg" class="collapse" action="/local-reg" method="post">
     <div>
         <p></p>
@@ -43,8 +45,8 @@
     <div>
         <label>Role:</label>
         <div class="radio">
-          <label><input type="radio" name="stat" value="0">Mentor</label>
-          <label><input type="radio" name="stat" value="1">Mentee</label>
+          <label><input type="radio" name="stat" value="Mentor">Mentor</label>
+          <label><input type="radio" name="stat" value="Mentee">Mentee</label>
         </div>
     </div>
     <div>

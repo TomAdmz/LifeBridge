@@ -3,6 +3,7 @@ var express = require('express');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var session = require('express-session');
+var bcrypt = require('bcrypt-nodejs');
 var request = require('request');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
@@ -47,25 +48,36 @@ app.use(express.static('public'));
 app.use(flash());
 //app.use(logger('combined'));
 app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(bodyParser.json());
 app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
-app.use(passport.initialize());
-app.use(passport.session());
 
 
 //===============PASSPORT===============
 // used to serialize the user for the session
-passport.serializeUser(function(user, done) {
-  done(null, user.id);
-});
+//passport.serializeUser(function(user, done) {
+//  done(null, user.id);
+//});
 // used to deserialize the user
-passport.deserializeUser(function(id, done) {
-  connection.query("select * from users where userId = "+id,function(err,rows){ 
-    done(err, rows[0]);
-  });
+//passport.deserializeUser(function(id, done) {
+//  connection.query("select * from users where userID = ?",[id],function(err,rows){ 
+//    console.log('de rows' + rows);
+//    done(err, rows[0]);
+//  });
+//});
+passport.serializeUser(function(user, done) {
+  done(null, user);
 });
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 passport.use('local-signup', new LocalStrategy({
         // by default, local strategy uses username and password, we will override with email
@@ -74,11 +86,11 @@ passport.use('local-signup', new LocalStrategy({
         passReqToCallback : true // allows us to pass back the entire request to the callback
     },
 
-function(req, email, password, done) {
+    function(req, email, password, done) {
 
     // find a user whose email is the same as the forms email
     // we are checking to see if the user trying to login already exists
-    connection.query("select * from users where userName = '"+email+"'",function(err,rows){
+    connection.query("select * from users where userName = ?", [email],function(err,rows){
       console.log(rows);
       console.log("above row object");
       if (err)
@@ -91,19 +103,53 @@ function(req, email, password, done) {
                 // create the user
           var newUserMysql = new Object();
         
-          newUserMysql.username = email;
-          newUserMysql.password = password; // use the generateHash function in our user model
+          newUserMysql.userName = email;
+          newUserMysql.pword =  password; // use the generateHash function in our user model
+          newUserMysql.fname = req.body.fname;
+          newUserMysql.lname = req.body.lname;
+          newUserMysql.stat = req.body.stat;
       
-          var insertQuery = "INSERT INTO users ( userName, pword ) values ('" + email +"','"+ password +"')";
+          var insertQuery = "INSERT INTO users ( userName, pword, fname, lname, stat ) values (?, ?, ?, ?, ?)";
           console.log(insertQuery);
-          connection.query(insertQuery,function(err,rows){
-          newUserMysql.id = rows.insertId;
+          connection.query(insertQuery, [email, password, req.body.fname, req.body.lname, req.body.stat], function(err,rows){
+            newUserMysql.id = rows.insertId;
         
-        return done(null, newUserMysql);
-        }); 
+            return done(null, newUserMysql);
+          }); 
             } 
     });
-}));
+})
+);
+
+//user login strategy
+passport.use('local-signin', new LocalStrategy({
+            // by default, local strategy uses username and password, we will override with email
+            usernameField : 'email',
+            passwordField : 'password',
+            passReqToCallback : true // allows us to pass back the entire request to the callback
+        },
+        function(req, email, password, done) { // callback with email and password from our form
+            connection.query("select * from users where userName = ?", [email],function(err,rows){
+                console.log(rows);
+                if (err) {
+                    console.log('error');
+                    return done(err);
+                } if (!rows.length) {
+                    console.log('no user');
+                    return done(null, false, req.flash('loginMessage', 'No user found.')); // req.flash is the way to set flashdata using connect-flash
+                }
+
+                // if the user is found but the password is wrong
+                if (password != rows[0].pword) {//(!bcrypt.compareSync(password, rows[0].pword)) {
+                    console.log('bad pass');
+                    return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
+                } 
+                // all is well, return successful user
+                console.log('OK');
+                return done(null, rows[0]);
+            });
+        })
+);
 
 // Session-persisted message middleware
 app.use(function(req, res, next){
@@ -132,12 +178,12 @@ app.set('port', 50000);
 
 app.get('/', function(req, res) {
   //res.render('home');
-  res.render('home');
+  res.render('home', {user: req.user});
 }); 
 
 //displays our signup page
 app.get('/signin', function(req, res){
-  res.render('signin');
+  res.render('signin', { message: req.flash('signupMessage') });
 });
 //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/local-reg', passport.authenticate('local-signup', {
@@ -150,13 +196,23 @@ app.post('/local-reg', passport.authenticate('local-signup', {
 app.post('/login', passport.authenticate('local-signin', {
   successRedirect: '/',
   failureRedirect: '/signin'
-  })
+  }),
+  function(req, res) {
+            console.log("hello");
+
+            if (req.body.remember) {
+              req.session.cookie.maxAge = 1000 * 60 * 3;
+            } else {
+              req.session.cookie.expires = false;
+            }
+        res.redirect('/');
+  }
 );
 
 //logs user out of site, deleting them from the session, and returns to homepage
 app.get('/logout', function(req, res){
-  var name = req.user.username;
-  console.log("LOGGIN OUT " + req.user.username)
+  var name = req.user.fname;
+  console.log("LOGGIN OUT " + req.user.userName)
   req.logout();
   res.redirect('/');
   req.session.notice = "You have successfully been logged out " + name + "!";
