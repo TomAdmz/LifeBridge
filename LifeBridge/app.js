@@ -96,6 +96,7 @@ passport.use('local-signup', new LocalStrategy({
       if (err)
         return done(err);
        if (rows.length) {
+                req.session.error = 'That username is already in use, please try a different one.'; //inform user could not log them in
                 return done(null, false, req.flash('signupMessage', 'That e-mail is already taken.'));
         } else {
 
@@ -183,7 +184,7 @@ app.get('/', function(req, res) {
 
 //displays our signup page
 app.get('/signin', function(req, res){
-  res.render('signin', { message: req.flash('signupMessage') });
+  res.render('signin', { msg: req.flash('signupMessage') });
 });
 //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/local-reg', passport.authenticate('local-signup', {
@@ -195,7 +196,8 @@ app.post('/local-reg', passport.authenticate('local-signup', {
 //sends the request through our local login/signin strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/login', passport.authenticate('local-signin', {
   successRedirect: '/',
-  failureRedirect: '/signin'
+  failureRedirect: '/signin',
+  failureFlash : true
   }),
   function(req, res) {
             console.log("hello");
@@ -217,6 +219,22 @@ app.get('/logout', function(req, res){
   res.redirect('/');
   req.session.notice = "You have successfully been logged out " + name + "!";
 });
+
+//inbox page
+app.get('/messages', function(req, res) {
+  var userID = req.user.userID;
+  var context = {};
+  connection.query('SELECT userName, messagetxt FROM messages INNER JOIN users ON userID = sendID WHERE recID = ?', [userID], function(err, rows, fields){
+    if(err){
+      next(err);
+      return;
+    }
+    console.log(rows);
+   // res.render('home'); 
+  res.render('messages', {user: req.user}, {rows: rows});
+  });
+  //res.render('messages', {user: req.user}, {rows: rows});
+}); 
 
 
 app.use(function(req,res){
