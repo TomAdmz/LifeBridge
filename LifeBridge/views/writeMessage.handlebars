@@ -1,0 +1,16 @@
+{{#if user}}
+<form id="sendMessage-form" class="" action="/sendMessage" method="post">
+    <div class="form-group">
+        <p></p>
+        <label>Send To E-mail:</label>
+        <input type="text" class="form-control" name="email"/>
+    </div>
+    <div class="form-group">
+        <label>Message:</label>
+        <textarea rows="3" type="text" class="form-control" name="message"></textarea>
+    </div>
+    <div>
+        <input type="submit" class="btn btn-primary btn-md" value="Send"/>
+    </div>
+</form>
+{{/if}}

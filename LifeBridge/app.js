@@ -264,6 +264,15 @@ app.get('/messages', function(req, res, next) {
   });
 }); 
 
+//write message page
+app.get('/writeMessage', function(req, res) {
+  var userID = req.user.userID;
+  res.render('writeMessage', {user: req.user});
+}); 
+
+//send message to DB
+
+
 app.get('/searchmentor',function(req,res){
   res.render('searchmentor');
 });
@@ -327,6 +336,8 @@ app.get('/mentee-results',function(req,res,next){
     }
   });
 });
+
+
 
 
 app.use(function(req,res){
