@@ -351,13 +351,11 @@ app.post('/setJob', function(req, res) {
     req.user.jobTitle = req.body.profession1;
   });
 
-  var catQuery = "SELECT * FROM users WHERE jobCategory = ? AND userName != ?";
-  connection.query(catQuery, [req.body.category, req.user.userName], function(err,rows){
+  var catQuery = "SELECT * FROM users WHERE jobCategory = ? AND userName != ? AND stat != ?";
+  connection.query(catQuery, [req.body.category, req.user.userName, req.user.stat], function(err,rows){
     console.log(rows);
     res.render('displayMatches', {user: req.user, matches: rows});
   });
-
-  //res.render('displayMatches', {user: req.user});
 });
 
 //displays the display matches page
