@@ -63,7 +63,7 @@ app.use(session({secret: 'supernova', saveUninitialized: true, resave: true}));
 //});
 // used to deserialize the user
 //passport.deserializeUser(function(id, done) {
-//  connection.query("select * from users where userID = ?",[id],function(err,rows){ 
+//  connection.query("select * from users where userID = ?",[id],function(err,rows){
 //    console.log('de rows' + rows);
 //    done(err, rows[0]);
 //  });
@@ -103,21 +103,21 @@ passport.use('local-signup', new LocalStrategy({
         // if there is no user with that email
                 // create the user
           var newUserMysql = new Object();
-        
+
           newUserMysql.userName = email;
           newUserMysql.pword =  password; // use the generateHash function in our user model
           newUserMysql.fname = req.body.fname;
           newUserMysql.lname = req.body.lname;
           newUserMysql.stat = req.body.stat;
-      
+
           var insertQuery = "INSERT INTO users ( userName, pword, fname, lname, stat ) values (?, ?, ?, ?, ?)";
           console.log(insertQuery);
           connection.query(insertQuery, [email, password, req.body.fname, req.body.lname, req.body.stat], function(err,rows){
             newUserMysql.id = rows.insertId;
-        
+
             return done(null, newUserMysql);
-          }); 
-            } 
+          });
+            }
     });
 })
 );
@@ -144,7 +144,7 @@ passport.use('local-signin', new LocalStrategy({
                 if (password != rows[0].pword) {//(!bcrypt.compareSync(password, rows[0].pword)) {
                     console.log('bad pass');
                     return done(null, false, req.flash('loginMessage', 'Oops! Wrong password.')); // create the loginMessage and save it to session as flashdata
-                } 
+                }
                 // all is well, return successful user
                 console.log('OK');
                 return done(null, rows[0]);
@@ -180,7 +180,7 @@ app.set('port', 50000);
 app.get('/', function(req, res) {
   //res.render('home');
   res.render('home', {user: req.user});
-}); 
+});
 
 //displays our signup page
 app.get('/signin', function(req, res){
@@ -230,12 +230,12 @@ app.get('/edit', function(req, res, next) {
 	  console.log(req.query.lname);
 	  console.log(req.query.userID);
 	  connection.query("UPDATE users SET fname=?, lname=?, pword=? WHERE userID =?", [req.query.fname, req.query.lname, req.query.pword, req.query.userID], function(err, result){
-	  
+
 	 if(err){
 		  next(err);
 		  return;
 	  }
-	  
+
 	  var user = req.user;
 	  user.fname=req.query.fname;
 	  user.lname=req.query.lname;
@@ -246,9 +246,9 @@ app.get('/edit', function(req, res, next) {
 			}
 	  });
 	  res.render('home', {user: req.user})
-	  
+
   });
-  
+
   });
 //inbox page
 app.get('/messages', function(req, res, next) {
@@ -262,13 +262,13 @@ app.get('/messages', function(req, res, next) {
     console.log(rows);
   res.render('messages', {user: req.user, rows: rows});
   });
-}); 
+});
 
 //write message page
 app.get('/writeMessage', function(req, res) {
   var userID = req.user.userID;
   res.render('writeMessage', {user: req.user});
-}); 
+});
 
 //send message to DB
 
@@ -335,6 +335,35 @@ app.get('/mentee-results',function(req,res,next){
       res.render('noresults');
     }
   });
+});
+
+
+//displays the find a match page
+app.get('/findMatch', function(req, res) {
+  res.render('findMatch', {user: req.user});
+});
+
+//takes data from findMatch page and edits user's job info in the database
+app.post('/setJob', function(req, res) {
+  var jobQuery = "UPDATE users SET jobCategory = ?, jobTitle = ? WHERE userName = ?";
+  connection.query(jobQuery, [req.body.category, req.body.profession1, req.user.userName], function(err,rows){
+    req.user.jobCategory = req.body.category;
+    req.user.jobTitle = req.body.profession1;
+  });
+
+  var catQuery = "SELECT * FROM users WHERE jobCategory = ? AND userName != ?";
+  connection.query(catQuery, [req.body.category, req.user.userName], function(err,rows){
+    console.log(rows);
+    res.render('displayMatches', {user: req.user, matches: rows});
+  });
+
+  //res.render('displayMatches', {user: req.user});
+});
+
+//displays the display matches page
+app.get('/displayMatches', function(req, res) {
+  res.render('displayMatches', {user: req.user});
+  console.log(req.user);
 });
 
 

@@ -4,6 +4,8 @@ fname varchar(255) NOT NULL,
 lname varchar(255) NOT NULL,
 pword varchar(255) NOT NULL,
 stat varchar(255) NOT NULL,
+jobCategory varchar(255) NOT NULL,
+jobTitle varchar(255) NOT NULL,
 PRIMARY KEY (userID)
 );
 
@@ -21,10 +23,10 @@ FOREIGN KEY (recID) REFERENCES users (userID)
 
 
 
-CREATE TABLE pairs (         	
-menteeID int(11) NOT NULL,    	
-mentorID int(11) NOT NULL,         	
-PRIMARY KEY (menteeID, mentorID),         	
+CREATE TABLE pairs (
+menteeID int(11) NOT NULL,
+mentorID int(11) NOT NULL,
+PRIMARY KEY (menteeID, mentorID),
 FOREIGN KEY (menteeID) REFERENCES users (userID),
 FOREIGN KEY (mentorID) REFERENCES users (userID)
 ) ENGINE=InnoDB DEFAULT  CHARSET=utf8;
