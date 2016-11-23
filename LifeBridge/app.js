@@ -96,7 +96,6 @@ passport.use('local-signup', new LocalStrategy({
       if (err)
         return done(err);
        if (rows.length) {
-                req.session.error = 'That username is already in use, please try a different one.'; //inform user could not log them in
                 return done(null, false, req.flash('signupMessage', 'That e-mail is already taken.'));
         } else {
 
@@ -184,7 +183,7 @@ app.get('/', function(req, res) {
 
 //displays our signup page
 app.get('/signin', function(req, res){
-  res.render('signin', { msg: req.flash('signupMessage') });
+  res.render('signin', { message: req.flash('signupMessage') });
 });
 //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/local-reg', passport.authenticate('local-signup', {
@@ -196,8 +195,7 @@ app.post('/local-reg', passport.authenticate('local-signup', {
 //sends the request through our local login/signin strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/login', passport.authenticate('local-signin', {
   successRedirect: '/',
-  failureRedirect: '/signin',
-  failureFlash : true
+  failureRedirect: '/signin'
   }),
   function(req, res) {
             console.log("hello");
@@ -214,91 +212,43 @@ app.post('/login', passport.authenticate('local-signin', {
 //logs user out of site, deleting them from the session, and returns to homepage
 app.get('/logout', function(req, res){
   var name = req.user.fname;
-  console.log("LOGGIN OUT " + req.user.userName)
+  console.log("LOGGING OUT " + req.user.userName)
   req.logout();
   res.redirect('/');
   req.session.notice = "You have successfully been logged out " + name + "!";
 });
 
-//inbox page
-app.get('/messages', function(req, res, next) {
-  var userID = req.user.userID;
-  var context = {};
-  connection.query('SELECT userName, messagetxt FROM messages INNER JOIN users ON userID = sendID WHERE recID = ?', [userID], function(err, rows){
-    if(err){
-      next(err);
-      return;
-    }
-    console.log(rows);
-  res.render('messages', {user: req.user, rows: rows});
+//edit data form
+app.get('/editForm', function(req, res){
+	res.render('edit',{user: req.user}); //render editform page with prepopulated table data
   });
-}); 
 
-app.get('/searchmentor',function(req,res){
-  res.render('searchmentor');
-});
-
-app.get('/searchmentee',function(req,res){
-  res.render('searchmentee');
-});
-
-app.get('/add-mentor',function(req,res,next){
-  connection.query("INSERT INTO mentors (`username`, `prof`) VALUES (?, ?)",
-    [req.query.username, req.query.prof], function(err, result){
-    if(err){
-      next(err);
-      return;
-    }
-
-    res.redirect(303, '/mentor-results?username=' + req.query.username + '&prof=' + req.query.prof);
+  app.get('/edit', function(req, res, next) {
+	  console.log(req.query.fname);
+	  console.log(req.query.lname);
+	  console.log(req.query.userID);
+	  connection.query("UPDATE users SET fname=?, lname=?, pword=? WHERE userID =?", [req.query.fname, req.query.lname, req.query.pword, req.query.userID], function(err, result){
+	  
+	 if(err){
+		  next(err);
+		  return;
+	  }
+	  
+	  var user = req.user;
+	  user.fname=req.query.fname;
+	  user.lname=req.query.lname;
+	  user.pword=req.query.pword;
+	  req.logIn(user, function(error){
+			if (!error){
+				console.log("good stuff");
+			}
+	  });
+	  res.render('home', {user: req.user})
+	  
   });
-});
-
-app.get('/add-mentee',function(req,res,next){
-  connection.query("INSERT INTO mentees (`username`, `prof`) VALUES (?, ?)",
-    [req.query.username, req.query.prof], function(err, result){
-    if(err){
-      next(err);
-      return;
-    }
-
-    res.redirect(303, '/mentee-results?username=' + req.query.username + '&prof=' + req.query.prof);
+  
   });
-});
-
-app.get('/mentor-results',function(req,res,next){
-  connection.query("SELECT * FROM mentees WHERE prof=?", [req.query.prof], function(err, rows, fields){
-    if(err){
-      next(err);
-      return;
-    }
-
-    if(rows[0] != null) {
-      res.render('menteematches', {rows: rows});
-    }
-    else {
-      res.render('noresults');
-    }
-  });
-});
-
-app.get('/mentee-results',function(req,res,next){
-  connection.query("SELECT * FROM mentors WHERE prof=?", [req.query.prof], function(err, rows, fields){
-    if(err){
-      next(err);
-      return;
-    }
-
-    if(rows[0] != null) {
-      res.render('mentormatches', {rows: rows});
-    }
-    else {
-      res.render('noresults');
-    }
-  });
-});
-
-
+  
 app.use(function(req,res){
   res.status(404);
   res.render('404');
