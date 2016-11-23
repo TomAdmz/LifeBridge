@@ -219,7 +219,37 @@ app.get('/logout', function(req, res){
   res.redirect('/');
   req.session.notice = "You have successfully been logged out " + name + "!";
 });
+//edit data form
+app.get('/editForm', function(req, res){
+	res.render('edit',{user: req.user}); //render editform page with prepopulated table data
+  });
 
+//applies the edit
+app.get('/edit', function(req, res, next) {
+	  console.log(req.query.fname);
+	  console.log(req.query.lname);
+	  console.log(req.query.userID);
+	  connection.query("UPDATE users SET fname=?, lname=?, pword=? WHERE userID =?", [req.query.fname, req.query.lname, req.query.pword, req.query.userID], function(err, result){
+	  
+	 if(err){
+		  next(err);
+		  return;
+	  }
+	  
+	  var user = req.user;
+	  user.fname=req.query.fname;
+	  user.lname=req.query.lname;
+	  user.pword=req.query.pword;
+	  req.logIn(user, function(error){
+			if (!error){
+				console.log("good stuff");
+			}
+	  });
+	  res.render('home', {user: req.user})
+	  
+  });
+  
+  });
 //inbox page
 app.get('/messages', function(req, res, next) {
   var userID = req.user.userID;
