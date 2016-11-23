@@ -11,7 +11,7 @@
         <form action="/setJob" method="post">
            <fieldset>
              <label for="category">Choose the category that best represents your career experience:</label>
-             <select id="category" name="category">
+             <select id="category" name="category" onchange="changeToInput(this);">
                 <option value="Arts, Audio/Video Technology and Communications">Arts, Audio/Video Technology and Communications</option>
                 <option value="Business Management and Administration">Business Management and Administration</option>
                 <option value="Education and Training">Education and Training</option>
@@ -25,6 +25,7 @@
                 <option value="Marketing, Sales and Service">Marketing, Sales and Service</option>
                 <option value="Science, Technology, Engineering and Mathematics">Science, Technology, Engineering and Mathematics</option>
                 <option value="Transportation, Distribution and Logistics">Transportation, Distribution and Logistics</option>
+                <option value = "Other">Other</option>
               </select>
 
             </br>
@@ -39,6 +40,7 @@
          </form>
       </div>
     </div>
+    <script src="/js/findMatch.js"></script>
 
 {{else}}
   <div class="jumbotron text-center">
@@ -55,3 +57,33 @@
   </div>
 
 {{/if}}
+
+<script>
+var Objs;
+
+function changeToInput(obj){
+    var sel = document.getElementById('category');
+    var newProf = sel.options[sel.selectedIndex].text;
+    if(newProf == 'Other') {
+    tb=document.createElement('INPUT');
+    tb.type='text';
+    tb.name='category';
+    tb.id='category';
+    tb.value=obj.options[obj.selectedIndex].text;
+    tbb=document.createElement('INPUT');
+    tbb.type='button';
+    tbb.value='Back';
+    tbb.objs=[obj,tb,tbb];
+    tbb.onclick=function(){ Replace(this.objs); }
+    obj.parentNode.insertBefore(tb,obj);
+    obj.parentNode.insertBefore(tbb,obj);
+    obj.parentNode.removeChild(obj);
+ }
+}
+
+function Replace(obj){
+  obj[2].parentNode.insertBefore(obj[0],obj[2]);
+  obj[0].parentNode.removeChild(obj[1]);
+  obj[0].parentNode.removeChild(obj[2]);
+}
+</script>
