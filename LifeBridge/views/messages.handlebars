@@ -1,7 +1,10 @@
-{{#if !user}}
+{{#if user}}
   <div class="jumbotron text-center">
     <h1>LifeBridge</h1>
     <p>Below are your messages</p>
+  </div>
+  <div class="container text-center" style="padding-bottom: 30px;">
+    <a href="/writeMessage"><button id="sendbtn" button type="button" class="btn btn-primary">Write Message</button></a>
   </div>
   <div class="panel panel-default">
     <div class="panel-heading">
@@ -13,9 +16,9 @@
 
         <tr>
 
-            <th>Sender</th?
+            <th>Sender</th>
 
-            <th>Message/th>
+            <th>Message</th>
 
         </tr>
       </thead>
@@ -37,6 +40,7 @@
       </tbody>
 
       </table>
+
     </div>
   </div>
 
