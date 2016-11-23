@@ -234,6 +234,70 @@ app.get('/messages', function(req, res, next) {
   });
 }); 
 
+app.get('/searchmentor',function(req,res){
+  res.render('searchmentor');
+});
+
+app.get('/searchmentee',function(req,res){
+  res.render('searchmentee');
+});
+
+app.get('/add-mentor',function(req,res,next){
+  connection.query("INSERT INTO mentors (`username`, `prof`) VALUES (?, ?)",
+    [req.query.username, req.query.prof], function(err, result){
+    if(err){
+      next(err);
+      return;
+    }
+
+    res.redirect(303, '/mentor-results?username=' + req.query.username + '&prof=' + req.query.prof);
+  });
+});
+
+app.get('/add-mentee',function(req,res,next){
+  connection.query("INSERT INTO mentees (`username`, `prof`) VALUES (?, ?)",
+    [req.query.username, req.query.prof], function(err, result){
+    if(err){
+      next(err);
+      return;
+    }
+
+    res.redirect(303, '/mentee-results?username=' + req.query.username + '&prof=' + req.query.prof);
+  });
+});
+
+app.get('/mentor-results',function(req,res,next){
+  connection.query("SELECT * FROM mentees WHERE prof=?", [req.query.prof], function(err, rows, fields){
+    if(err){
+      next(err);
+      return;
+    }
+
+    if(rows[0] != null) {
+      res.render('menteematches', {rows: rows});
+    }
+    else {
+      res.render('noresults');
+    }
+  });
+});
+
+app.get('/mentee-results',function(req,res,next){
+  connection.query("SELECT * FROM mentors WHERE prof=?", [req.query.prof], function(err, rows, fields){
+    if(err){
+      next(err);
+      return;
+    }
+
+    if(rows[0] != null) {
+      res.render('mentormatches', {rows: rows});
+    }
+    else {
+      res.render('noresults');
+    }
+  });
+});
+
 
 app.use(function(req,res){
   res.status(404);
