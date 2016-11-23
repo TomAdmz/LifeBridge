@@ -221,19 +221,17 @@ app.get('/logout', function(req, res){
 });
 
 //inbox page
-app.get('/messages', function(req, res) {
+app.get('/messages', function(req, res, next) {
   var userID = req.user.userID;
   var context = {};
-  connection.query('SELECT userName, messagetxt FROM messages INNER JOIN users ON userID = sendID WHERE recID = ?', [userID], function(err, rows, fields){
+  connection.query('SELECT userName, messagetxt FROM messages INNER JOIN users ON userID = sendID WHERE recID = ?', [userID], function(err, rows){
     if(err){
       next(err);
       return;
     }
     console.log(rows);
-   // res.render('home'); 
-  res.render('messages', {user: req.user}, {rows: rows});
+  res.render('messages', {user: req.user, rows: rows});
   });
-  //res.render('messages', {user: req.user}, {rows: rows});
 }); 
 
 
