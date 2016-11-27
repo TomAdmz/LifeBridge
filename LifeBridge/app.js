@@ -273,70 +273,6 @@ app.get('/writeMessage', function(req, res) {
 //send message to DB
 
 
-app.get('/searchmentor',function(req,res){
-  res.render('searchmentor');
-});
-
-app.get('/searchmentee',function(req,res){
-  res.render('searchmentee');
-});
-
-app.get('/add-mentor',function(req,res,next){
-  connection.query("INSERT INTO mentors (`username`, `prof`) VALUES (?, ?)",
-    [req.query.username, req.query.prof], function(err, result){
-    if(err){
-      next(err);
-      return;
-    }
-
-    res.redirect(303, '/mentor-results?username=' + req.query.username + '&prof=' + req.query.prof);
-  });
-});
-
-app.get('/add-mentee',function(req,res,next){
-  connection.query("INSERT INTO mentees (`username`, `prof`) VALUES (?, ?)",
-    [req.query.username, req.query.prof], function(err, result){
-    if(err){
-      next(err);
-      return;
-    }
-
-    res.redirect(303, '/mentee-results?username=' + req.query.username + '&prof=' + req.query.prof);
-  });
-});
-
-app.get('/mentor-results',function(req,res,next){
-  connection.query("SELECT * FROM mentees WHERE prof=?", [req.query.prof], function(err, rows, fields){
-    if(err){
-      next(err);
-      return;
-    }
-
-    if(rows[0] != null) {
-      res.render('menteematches', {rows: rows});
-    }
-    else {
-      res.render('noresults');
-    }
-  });
-});
-
-app.get('/mentee-results',function(req,res,next){
-  connection.query("SELECT * FROM mentors WHERE prof=?", [req.query.prof], function(err, rows, fields){
-    if(err){
-      next(err);
-      return;
-    }
-
-    if(rows[0] != null) {
-      res.render('mentormatches', {rows: rows});
-    }
-    else {
-      res.render('noresults');
-    }
-  });
-});
-
 
 //displays the find a match page
 app.get('/findMatch', function(req, res) {
@@ -344,15 +280,25 @@ app.get('/findMatch', function(req, res) {
 });
 
 //takes data from findMatch page and edits user's job info in the database
-app.post('/setJob', function(req, res) {
-  var jobQuery = "UPDATE users SET jobCategory = ?, jobTitle = ? WHERE userName = ?";
-  connection.query(jobQuery, [req.body.category, req.body.profession1, req.user.userName], function(err,rows){
-    req.user.jobCategory = req.body.category;
-    req.user.jobTitle = req.body.profession1;
+app.post('/setJob', function(req, res, next) {
+  var jobQuery = "INSERT IGNORE INTO jobs (`prof`) VALUES (?)";
+  connection.query(jobQuery, [req.body.category], function(err,rows){
+    if(err){
+      next(err);
+      return;
+    }
   });
 
-  var catQuery = "SELECT * FROM users WHERE jobCategory = ? AND userName != ? AND stat != ?";
-  connection.query(catQuery, [req.body.category, req.user.userName, req.user.stat], function(err,rows){
+  var jobQuery = "INSERT IGNORE INTO experience (`uid`,`jid`) VALUES (?, (SELECT jobs.id FROM jobs WHERE jobs.prof=?))";
+  connection.query(jobQuery, [req.user.userID, req.body.category], function(err,rows){
+    if(err){
+      next(err);
+      return;
+    }
+  });
+
+  var catQuery = "SELECT * FROM users INNER JOIN experience ON users.userID=experience.uid INNER JOIN jobs ON jobs.id=experience.jid WHERE stat !=? AND jid IN (SELECT experience.jid FROM experience INNER JOIN jobs ON jobs.id=experience.jid WHERE jobs.prof =?)";
+  connection.query(catQuery, [req.user.stat, req.body.category], function(err,rows){
     console.log(rows);
     res.render('displayMatches', {user: req.user, matches: rows});
   });
@@ -361,7 +307,6 @@ app.post('/setJob', function(req, res) {
 //displays the display matches page
 app.get('/displayMatches', function(req, res) {
   res.render('displayMatches', {user: req.user});
-  console.log(req.user);
 });
 
 
