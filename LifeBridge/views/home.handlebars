@@ -13,7 +13,22 @@
 	  <p>Name: {{user.fname}} {{user.lname}}</p>
       <p>Username: {{user.userName}}</p>
       <p>Status: {{user.stat}}</p>
-	  <p>Fields of interest: filler for now</p>
+	  <p>Fields of interest:  
+	   {{#each rows}}
+
+           <li>
+
+                {{this.prof}}
+
+            
+
+            </li>
+
+        {{/each}}
+	  
+	  
+	  
+	  </p>
     </div>
 	<div class="panel-footer">
 	<button id="viewMatches" button type="button" class="btn btn-primary">View Matches</button>
