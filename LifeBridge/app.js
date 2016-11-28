@@ -281,6 +281,8 @@ app.get('/findMatch', function(req, res) {
 
 //takes data from findMatch page and edits user's job info in the database
 app.post('/setJob', function(req, res, next) {
+
+  //adds to job table if job is new
   var jobQuery = "INSERT IGNORE INTO jobs (`prof`) VALUES (?)";
   connection.query(jobQuery, [req.body.category], function(err,rows){
     if(err){
@@ -289,6 +291,7 @@ app.post('/setJob', function(req, res, next) {
     }
   });
 
+  // if new experience it is added to the relationship table
   var jobQuery = "INSERT IGNORE INTO experience (`uid`,`jid`) VALUES (?, (SELECT jobs.id FROM jobs WHERE jobs.prof=?))";
   connection.query(jobQuery, [req.user.userID, req.body.category], function(err,rows){
     if(err){
@@ -297,6 +300,7 @@ app.post('/setJob', function(req, res, next) {
     }
   });
 
+  // search using job
   var catQuery = "SELECT * FROM users INNER JOIN experience ON users.userID=experience.uid INNER JOIN jobs ON jobs.id=experience.jid WHERE stat !=? AND jid IN (SELECT experience.jid FROM experience INNER JOIN jobs ON jobs.id=experience.jid WHERE jobs.prof =?)";
   connection.query(catQuery, [req.user.stat, req.body.category], function(err,rows){
     console.log(rows);
@@ -309,7 +313,31 @@ app.get('/displayMatches', function(req, res) {
   res.render('displayMatches', {user: req.user});
 });
 
-
+//handles sending requests
+app.get('/sendrequest', function(req, res, next) {
+  console.log(req.user.userID + " sent to " + req.query.sentid);
+  console.log(req.user.stat + " : the status of the person requesting");
+  if(req.user.stat == "Mentor") {
+    console.log("inside mentor");
+    var requestQuery = "INSERT IGNORE INTO pairs (`menteeID`,`mentorID`,`ismatched`) VALUES (?, ?, ?)";
+    connection.query(requestQuery, [req.query.sentid, req.user.userID, false], function(err,rows){
+      if(err){
+        next(err);
+        return;
+      }
+    });
+  }
+  else {
+    var requestQuery = "INSERT IGNORE INTO pairs (`menteeID`,`mentorID`,`ismatched`) VALUES (?, ?, ?)";
+    connection.query(requestQuery, [req.user.userID, req.query.sentid, false], function(err,rows){
+      if(err){
+        next(err);
+        return;
+      }
+    });
+  }
+  res.render('sendrequest', {user: req.user});
+});
 
 
 app.use(function(req,res){
