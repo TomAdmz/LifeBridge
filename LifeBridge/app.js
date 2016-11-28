@@ -317,25 +317,13 @@ app.get('/displayMatches', function(req, res) {
 app.get('/sendrequest', function(req, res, next) {
   console.log(req.user.userID + " sent to " + req.query.sentid);
   console.log(req.user.stat + " : the status of the person requesting");
-  if(req.user.stat == "Mentor") {
-    console.log("inside mentor");
-    var requestQuery = "INSERT IGNORE INTO pairs (`menteeID`,`mentorID`,`ismatched`) VALUES (?, ?, ?)";
-    connection.query(requestQuery, [req.query.sentid, req.user.userID, false], function(err,rows){
-      if(err){
-        next(err);
-        return;
-      }
-    });
-  }
-  else {
-    var requestQuery = "INSERT IGNORE INTO pairs (`menteeID`,`mentorID`,`ismatched`) VALUES (?, ?, ?)";
-    connection.query(requestQuery, [req.user.userID, req.query.sentid, false], function(err,rows){
-      if(err){
-        next(err);
-        return;
-      }
-    });
-  }
+  var requestQuery = "INSERT IGNORE INTO pairs (`requestid`,`sentid`,`ismatched`) VALUES (?, ?, ?)";
+  connection.query(requestQuery, [req.query.sentid, req.user.userID, false], function(err,rows){
+    if(err){
+      next(err);
+      return;
+    }
+  });
   res.render('sendrequest', {user: req.user});
 });
 
