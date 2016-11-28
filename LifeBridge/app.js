@@ -178,8 +178,23 @@ app.set('port', 50000);
 //===============ROUTES===============
 
 app.get('/', function(req, res) {
-  //res.render('home');
-  res.render('home', {user: req.user});
+    if(req.user)
+	{		
+   var context = {};
+   connection.query('SELECT prof FROM users INNER JOIN experience ON userID = uid INNER JOIN jobs on jid = id where userID = ?', [req.user.userID], function(err, rows){
+    if(err){
+      next(err);
+      return;
+    }
+    console.log(rows);
+	 res.render('home', {user: req.user, rows: rows});
+  });
+	}
+	
+	else
+	{res.render('home', {user: req.user});}
+
+  
 });
 
 //displays our signup page
