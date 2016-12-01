@@ -1,7 +1,7 @@
 {{#if user}}
   <div class="jumbotron text-center">
     <h1>LifeBridge</h1>
-    <p>Below are your matches</p>
+    <p>My Matches</p>
   </div>
 
   <div class="panel panel-default">
@@ -14,9 +14,12 @@
 
         <tr>
 
-            <th>Sender</th>
+            <th>Username</th>
 
-            <th>Action</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Fields of Interest</th>
+            <th>Contact</th>
 
         </tr>
       </thead>
@@ -28,9 +31,17 @@
             <tr>
 
                 <td>{{this.userName}}</td>
+                <td>{{this.fname}}</td>
+                <td>{{this.lname}}</td>
                 <td>
-                <a href="/acceptMatch?sentid={{this.userID}}"><button id="acceptbtn" button type="button" class="btn btn-primary">Accept</button></a>
-                <a href="/declineMatch?sentid={{this.userID}}"><button id="declinebtn" button type="button" class="btn btn-primary">Decline</button></a>
+                {{#each this.prof}}
+                  {{this.prof}} .
+                {{/each}}
+                </td>
+
+                <td>
+                <a href="/writeMessage"><button id="writeMessagebtn" button type="button" class="btn btn-primary">Send Message</button></a>
+
                 </td>
 
             </tr>
