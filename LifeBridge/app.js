@@ -288,6 +288,19 @@ app.get('/writeMessage', function(req, res) {
 //send message to DB
 
 
+//manage mentor/mentee requests
+app.get('/manageMatches', function(req, res, next) {
+  var userID = req.user.userID;
+  var context = {};
+  connection.query('SELECT userName FROM pairs INNER JOIN users ON userID = sentid WHERE ismatched = 0 AND requestid = ?', [userID], function(err, rows){
+    if(err){
+      next(err);
+      return;
+    }
+    console.log(rows);
+  res.render('manageMatches', {user: req.user, rows: rows});
+  });
+});
 
 //displays the find a match page
 app.get('/findMatch', function(req, res) {
