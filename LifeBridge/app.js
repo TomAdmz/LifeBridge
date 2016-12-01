@@ -335,10 +335,18 @@ app.get('/declineMatch', function(req, res, next) {
 app.get('/myMatches', function(req, res, next) {
   var userID = req.user.userID;
   var context = {};
-  connection.query('SELECT userName, fname, lname FROM pairs INNER JOIN users ON userID = sentid WHERE ismatched = 1 AND requestid = ? OR sentid = ?', [userID, userID], function(err, rows){
+  connection.query('SELECT userID, userName, fname, lname, GROUP_CONCAT(DISTINCT prof) prof FROM pairs INNER JOIN users ON userID = sentid OR userID = requestid  INNER JOIN experience on userID = uid INNER JOIN jobs on jid = id WHERE ismatched = 1 AND (requestid = ? OR sentid = ?) GROUP BY userName', [userID, userID], function(err, rows){
     if(err){
       next(err);
       return;
+    }
+    console.log(rows);
+    for (var i = rows.length; i--;) {
+      (function(j) {
+        if (rows[j].userID == userID) {
+          rows.splice(j, 1)
+        }
+      })(i);
     }
     console.log(rows);
   res.render('myMatches', {user: req.user, rows: rows});
