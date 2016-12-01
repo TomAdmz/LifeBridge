@@ -3,7 +3,7 @@ var server = request.agent('http://localhost:50000');
 
 describe('GET /findmatch', function(){
     it('login', loginUser());
-    it('uri that requires user to be logged in', function(done){
+    it('url that requires user to be logged in', function(done){
     server
         .get('/findmatch')                       
         .expect(200)
