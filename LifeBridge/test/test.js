@@ -13,6 +13,8 @@ describe('Lifebridge is Running', function(){
             done();
         });
     });
+});
+describe('Lifebridge User Login Features Functioning', function(){
     it('successful login', function(done){
     agent
             .post('/login')
@@ -71,7 +73,7 @@ describe('Lifebridge is Running', function(){
 
 });
 
-describe('Search Works', function() {
+describe('Search Functioning', function() {
 
     before(function(done){
     agent
@@ -110,6 +112,30 @@ describe('Search Works', function() {
         .get('/')
         .type('form')                      
         .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+});
+
+describe('Logout Successful', function() {
+
+    it('log out page loads', function(done){
+    agent
+        .get('/logout')
+        .type('form')                      
+        .expect(302)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+    it('user session erased successfully', function(done){
+    agent
+        .get('/messages')
+        .type('form')                      
+        .expect(500)
         .end(function(err, res){
             if (err) return done(err);
             done();
