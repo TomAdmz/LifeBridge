@@ -1,26 +1,24 @@
-var request = require('supertest');
-var server = request.agent('http://localhost:50000');
+var should = require('should'),
+expect = require('chai').expect,
+supertest = require('supertest'),
+agent = supertest.agent('http://localhost:50000');
 
-describe('GET /findmatch', function(){
-    it('login', loginUser());
-    it('url that requires user to be logged in', function(done){
-    server
-        .get('/findmatch')                       
+describe('Lifebridge is Running', function(){
+    it('home page loads', function(done){
+    agent
+        .get('/')                       
         .expect(200)
         .end(function(err, res){
             if (err) return done(err);
-            console.log(res.body);
-            done()
+            done();
         });
     });
-});
-
-
-function loginUser() {
-    return function(done) {
-        server
+    it('successful login', function(done){
+    agent
             .post('/login')
-            .send({ email: 'tdawg', password: 't' })
+            .type('form')
+            .send({ email: 'tdawg' })
+            .send({ password: 't' })
             .expect(302)
             .expect('Location', '/')
             .end(onResponse);
@@ -29,5 +27,92 @@ function loginUser() {
            if (err) return done(err);
            return done();
         }
-    };
-};
+    });
+    it('user profile page loads', function(done){
+    agent
+        .get('/')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+    it('messages page loads', function(done){
+    agent
+        .get('/messages')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+    it('manage matches page loads', function(done){
+    agent
+        .get('/manageMatches')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+    it('myMatches page loads', function(done){
+    agent
+        .get('/myMatches')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+
+});
+
+describe('Search Works', function() {
+
+    before(function(done){
+    agent
+        .post('/setJob')
+        .type('form')
+        .send({ category: 'Arts' })
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+
+    it('find match page loads', function(done){
+    agent
+        .get('/findMatch')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+    it('search results page loads', function(done){
+    agent
+        .get('/displayMatches')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+    it('user job list update successful', function(done){
+    agent
+        .get('/')
+        .type('form')                      
+        .expect(200)
+        .end(function(err, res){
+            if (err) return done(err);
+            done();
+        });
+    });
+});
