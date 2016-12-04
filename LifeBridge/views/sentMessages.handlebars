@@ -1,11 +1,11 @@
 {{#if user}}
   <div class="jumbotron text-center">
     <h1>LifeBridge</h1>
-    <p>Below are your messages</p>
+    <p>Below are your sent messages</p>
   </div>
   <div class="container text-center" style="padding-bottom: 30px;">
     <a href="/writeMessage"><button id="sendbtn" button type="button" class="btn btn-primary">Write Message</button></a>
-    <a href="/sentMessages"><button id="sentMessagesbtn" button type="button" class="btn btn-primary">Outbox</button></a>
+    <a href="/messages"><button id="messagesbtn" button type="button" class="btn btn-primary">Inbox</button></a>
   </div>
   <div class="panel panel-default">
     <div class="panel-heading">
@@ -17,7 +17,7 @@
 
         <tr>
 
-            <th>Sender</th>
+            <th>Sent To</th>
 
             <th>Message</th>
 

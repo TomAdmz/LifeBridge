@@ -97,9 +97,8 @@ passport.use('local-signup', new LocalStrategy({
         return done(err);
        if (rows.length) {
                 req.session.error = 'That username is already in use, please try a different one.'; //inform user could not log them in
-                return done(null, false, req.flash('signupMessage', 'That e-mail is already taken.'));
+                return done(null, false, req.session.error, req.flash('signupMessage', 'That e-mail is already taken.'));
         } else {
-
         // if there is no user with that email
                 // create the user
           var newUserMysql = new Object();
@@ -199,7 +198,7 @@ app.get('/', function(req, res) {
 
 //displays our signup page
 app.get('/signin', function(req, res){
-  res.render('signin', { msg: req.flash('signupMessage') });
+  res.render('signin', { msg: req.flash('signupMessage'), msg: req.flash('loginMessage')});
 });
 //sends the request through our local signup strategy, and if successful takes user to homepage, otherwise returns then to signin page
 app.post('/local-reg', passport.authenticate('local-signup', {
@@ -265,6 +264,8 @@ app.get('/edit', function(req, res, next) {
   });
 
   });
+
+
 //inbox page
 app.get('/messages', function(req, res, next) {
   var userID = req.user.userID;
@@ -279,6 +280,20 @@ app.get('/messages', function(req, res, next) {
   });
 });
 
+//outbox page
+app.get('/sentMessages', function(req, res, next) {
+  var userID = req.user.userID;
+  var context = {};
+  connection.query('SELECT userName, messagetxt FROM messages INNER JOIN users ON userID = recID WHERE sendID = ?', [userID], function(err, rows){
+    if(err){
+      next(err);
+      return;
+    }
+    console.log(rows);
+  res.render('sentMessages', {user: req.user, rows: rows});
+  });
+});
+
 //write message page
 app.get('/writeMessage', function(req, res) {
   var userID = req.user.userID;
@@ -286,6 +301,19 @@ app.get('/writeMessage', function(req, res) {
 });
 
 //send message to DB
+app.post('/sendMessage', function(req, res, next) {
+  var userID = req.user.userID;
+  var context = {};
+  connection.query('INSERT IGNORE INTO messages (`recID`, `messagetxt`, `sendID`) VALUES ((SELECT userID FROM users where userName = ?), ?, ?)', [req.body.userName, req.body.messagetxt, userID], function(err, rows){
+    if(err){
+      next(err);
+      return;
+    }
+    console.log(rows);
+    var msg = "Message sent to " + req.body.userName;
+    res.render('writeMessage', {user: req.user, msg: msg});
+  });
+});
 
 
 //manage mentor/mentee requests
