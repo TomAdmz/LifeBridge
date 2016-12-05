@@ -30,6 +30,36 @@ describe('Lifebridge User Login Features Functioning', function(){
            return done();
         }
     });
+    it('unsuccessful login', function(done){
+    agent
+            .post('/login')
+            .type('form')
+            .send({ email: 'tdawg' })
+            .send({ password: 'aa' })
+            .expect(302)
+            .expect('Location', '/signin')
+            .end(onResponse);
+
+        function onResponse(err, res) {
+           if (err) return done(err);
+           return done();
+        }
+    });
+    it('unsuccessful signup', function(done){
+    agent
+            .post('/local-reg')
+            .type('form')
+            .send({ email: 'tdawg' })
+            .send({ password: 'aa' })
+            .expect(302)
+            .expect('Location', '/signin')
+            .end(onResponse);
+
+        function onResponse(err, res) {
+           if (err) return done(err);
+           return done();
+        }
+    });
     it('user profile page loads', function(done){
     agent
         .get('/')
@@ -119,6 +149,7 @@ describe('Search Functioning', function() {
     });
 });
 
+
 describe('Logout Successful', function() {
 
     it('log out page loads', function(done){
@@ -142,3 +173,4 @@ describe('Logout Successful', function() {
         });
     });
 });
+
